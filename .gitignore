@@ -1,6 +1,21 @@
-# Maven build outputs
-target/
-*.releaseBackup
+# Root gitignore
+
+# Server build outputs
+server/target/
+server/*.releaseBackup
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
 # IDEs and Editors
 .idea/
@@ -11,8 +26,3 @@ target/
 .project
 .metadata/
 bin/
-
-# OS-specific files
-Thumbs.db
-.DS_Store
-target/
