@@ -1,13 +1,14 @@
 # KnowledgeHub Current State
 
-**Current Phase:** Stage 3 - Database Setup & First Run
-**Status:** Configuring In-Memory Database (Bypassing Docker issues)
+**Current Phase:** System Architecture Alignment & Authentication Foundation
+**Status:** Pivoting from feature development (WebSockets) to core infrastructure.
 
 ## Recent Actions:
-1. Finished the Core Domain (Controllers, Services, Repositories, Entities).
-2. Started Stage 3 to get the application running locally.
+1. Built a functional, minimalist React frontend connected to the backend.
+2. Realized that proceeding with advanced features (like WebSockets) without a solid foundation (Auth, API Gateway) leads to "half-baked" endpoints.
+3. Decided to pause feature work and align the codebase with the strict `system_architecture.md` blueprint.
 
 ## Next Immediate Steps:
-- Add H2 Database dependency to `pom.xml`.
-- Update `application.yaml` to use H2.
-- Run the Spring Boot application!
+- Restructure the project into the defined Monorepo pattern (`api-gateway`, `core-api`, `frontend`).
+- Introduce Keycloak for real User Login and Onboarding.
+- Configure Spring Cloud Gateway to route traffic and protect endpoints.

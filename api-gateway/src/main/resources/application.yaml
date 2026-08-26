@@ -1,0 +1,25 @@
+server:
+  port: 8080 # The gateway takes the main port 8080!
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - TokenRelay # Automatically passes the JWT down to the core-api
+      routes:
+        - id: core-api-route
+          uri: http://localhost:8081 # Forwards traffic to our backend
+          predicates:
+            - Path=/api/**
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8082/realms/collabpad-realm
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG

@@ -21,17 +21,14 @@ public class Document {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    // A Document MUST belong to a Workspace.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "workspace_id", nullable = false)
     private Workspace workspace;
 
-    // Best Practice: Also link directly to Tenant for faster, safer database queries (Data Isolation/Sharding).
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
-    // The user who created this document.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;

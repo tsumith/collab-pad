@@ -1,12 +1,24 @@
-# KnowledgeHub Backlog / Tech Debt
+This document tracks future refactoring, technical debt, and items we are intentionally deferring to later stages.
 
-This document tracks future refactoring, technical debt, and items we are intentionally deferring to later stages of the implementation plan.
+## Deferred Features (Moved to Backlog)
 
-## Future Changes / Refactors
+### Real-Time WebSockets & Caching
+- **WebSockets**: Live collaborative editing via STOMP/WebSockets.
+- **Redis Pub/Sub**: Multi-server sync for WebSockets.
+- *(Note: We pivoted to build the Auth/Gateway foundation first. We will return to this when the core is rock solid).*
 
-### Security & Roles (Stage 6)
-- **User Role Management**: Currently, the `role` in the `User` entity is stored as a simple `String`. In Stage 6, when we introduce **Keycloak**, we need to remove this field and rely on Keycloak's OIDC tokens and Claims for role-based access control.
-- **API Authentication Headers**: The `DocumentController` currently relies on `X-Tenant-Id` and `X-User-Id` HTTP headers. In Stage 6, these must be removed and replaced by extracting the IDs securely from the Keycloak JWT token to prevent spoofing.
+### Event-Driven & Async Processing
+- **Apache Kafka**: Decoupled events and background worker processes.
+- **Saga Pattern**: Distributed transactions.
 
-### Infrastructure
-- **PostgreSQL**: Switch from H2 in-memory DB back to PostgreSQL once Docker/WSL issues are resolved.
+### AI & Semantic Search Integration
+- **Qdrant**: Vector database for storing document embeddings.
+- **Ollama**: Local LLM for RAG queries.
+
+## Addressed Items
+- ~~**PostgreSQL Infrastructure**~~: Completed (Docker Compose).
+
+## Technical Debt (To Fix Next)
+- **User Mapping**: Replace hardcoded `authorId = 1L` in `DocumentController.java` by properly syncing Keycloak users with our Postgres `User` table.
+- **Workspace Selection**: Replace hardcoded `activeWorkspaceId = 1` in `App.jsx` by building a Workspace dropdown selector in the UI.
+- ~~**User Role Management & API Headers**~~: We are implementing Keycloak right now!

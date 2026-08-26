@@ -1,21 +1,29 @@
 spring:
   application:
     name: collabpad
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/collab_db}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:collabpassword}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-  flyway:
-      enabled: true
-    baseline-on-migrate: true
+    
+  server:
+    port: 8081
 
-server:
-  port: 8080
+  datasource:
+    url: jdbc:postgresql://localhost:5432/collab_db
+    username: postgres
+    password: collabpassword
+    driver-class-name: org.postgresql.Driver
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8082/realms/collabpad-realm
+    
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      # Automatically create our tables from our Java Entities!
+      ddl-auto: update
+    show-sql: true
+    
+  # We will leave Flyway disabled for now so Hibernate handles the initial schema
+  flyway:
+    enabled: false

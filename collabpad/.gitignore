@@ -68,3 +68,4 @@ build/
 /docs/state.md
 /docs/implementation_plan.md
 /docs/backlog.md
+.env

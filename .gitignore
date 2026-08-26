@@ -2,7 +2,11 @@
 
 # Server build outputs
 server/target/
+api-gateway/target/
 server/*.releaseBackup
+
+# Secrets
+**/.env
 
 # Frontend dependencies and builds
 frontend/node_modules/
