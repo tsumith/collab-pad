@@ -30,3 +30,6 @@ frontend/yarn-error.log*
 .project
 .metadata/
 bin/
+
+# Documentation
+docs/
