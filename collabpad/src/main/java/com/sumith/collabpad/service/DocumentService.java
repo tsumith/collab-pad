@@ -2,6 +2,7 @@ package com.sumith.collabpad.service;
 
 import com.sumith.collabpad.dto.DocumentRequest;
 import com.sumith.collabpad.dto.DocumentResponse;
+import com.sumith.collabpad.dto.DocumentNodeResponse;
 import com.sumith.collabpad.entity.Document;
 import com.sumith.collabpad.entity.Tenant;
 import com.sumith.collabpad.entity.User;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,6 +63,19 @@ public class DocumentService {
         document.setTenant(tenant);
         document.setWorkspace(workspace);
         document.setAuthor(author);
+        
+        document.setIcon(request.icon());
+        document.setCoverImageUrl(request.coverImageUrl());
+        document.setPositionOrder(request.positionOrder());
+        
+        if (request.parentId() != null) {
+            Document parent = documentRepository.findById(request.parentId())
+                    .orElseThrow(() -> new IllegalArgumentException("Parent document not found"));
+            if (!parent.getWorkspace().getId().equals(workspaceId)) {
+                throw new SecurityException("Parent document must be in the same workspace");
+            }
+            document.setParentDocument(parent);
+        }
 
         Document savedDocument = documentRepository.save(document);
         return mapToResponse(savedDocument);
@@ -82,6 +98,58 @@ public class DocumentService {
                 .collect(Collectors.toList());
     }
 
+    public List<DocumentNodeResponse> getDocumentTree(Long tenantId, Long workspaceId) {
+        List<Document> allDocs = documentRepository.findByWorkspaceIdAndTenantId(workspaceId, tenantId);
+        
+        Map<Long, DocumentNodeResponse> nodeMap = allDocs.stream()
+                .collect(Collectors.toMap(
+                        Document::getId,
+                        doc -> new DocumentNodeResponse(
+                                doc.getId(),
+                                doc.getTitle(),
+                                doc.getIcon(),
+                                doc.getCoverImageUrl(),
+                                doc.getPositionOrder(),
+                                doc.getCreatedAt(),
+                                doc.getUpdatedAt(),
+                                new ArrayList<>() // mutable list for children
+                        )
+                ));
+                
+        List<DocumentNodeResponse> roots = new ArrayList<>();
+        
+        for (Document doc : allDocs) {
+            DocumentNodeResponse node = nodeMap.get(doc.getId());
+            if (doc.getParentDocument() == null) {
+                roots.add(node);
+            } else {
+                DocumentNodeResponse parentNode = nodeMap.get(doc.getParentDocument().getId());
+                if (parentNode != null) {
+                    parentNode.children().add(node);
+                } else {
+                    roots.add(node);
+                }
+            }
+        }
+        
+        sortNodes(roots);
+        return roots;
+    }
+    
+    private void sortNodes(List<DocumentNodeResponse> nodes) {
+        nodes.sort((a, b) -> {
+            if (a.positionOrder() == null && b.positionOrder() == null) return 0;
+            if (a.positionOrder() == null) return 1;
+            if (b.positionOrder() == null) return -1;
+            return a.positionOrder().compareTo(b.positionOrder());
+        });
+        for (DocumentNodeResponse node : nodes) {
+            if (!node.children().isEmpty()) {
+                sortNodes(node.children());
+            }
+        }
+    }
+
     @Transactional
     public DocumentResponse updateDocument(Long tenantId, Long id, DocumentRequest request) {
         Document document = documentRepository.findById(id)
@@ -93,6 +161,23 @@ public class DocumentService {
         
         document.setTitle(request.title());
         document.setContent(request.content());
+        document.setIcon(request.icon());
+        document.setCoverImageUrl(request.coverImageUrl());
+        document.setPositionOrder(request.positionOrder());
+        
+        if (request.parentId() != null) {
+            if (request.parentId().equals(id)) {
+                throw new IllegalArgumentException("Document cannot be its own parent");
+            }
+            Document parent = documentRepository.findById(request.parentId())
+                    .orElseThrow(() -> new IllegalArgumentException("Parent document not found"));
+            if (!parent.getWorkspace().getId().equals(document.getWorkspace().getId())) {
+                throw new SecurityException("Parent document must be in the same workspace");
+            }
+            document.setParentDocument(parent);
+        } else {
+            document.setParentDocument(null);
+        }
         
         Document updatedDocument = documentRepository.save(document);
         return mapToResponse(updatedDocument);
@@ -115,6 +200,10 @@ public class DocumentService {
                 document.getId(),
                 document.getTitle(),
                 document.getContent(),
+                document.getParentDocument() != null ? document.getParentDocument().getId() : null,
+                document.getIcon(),
+                document.getCoverImageUrl(),
+                document.getPositionOrder(),
                 document.getCreatedAt(),
                 document.getUpdatedAt()
         );

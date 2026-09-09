@@ -33,6 +33,19 @@ public class Document {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_document_id")
+    private Document parentDocument;
+
+    @Column
+    private String icon;
+
+    @Column(name = "cover_image_url", length = 1024)
+    private String coverImageUrl;
+
+    @Column(name = "position_order")
+    private Double positionOrder;
+
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -117,5 +130,37 @@ public class Document {
 
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Document getParentDocument() {
+        return parentDocument;
+    }
+
+    public void setParentDocument(Document parentDocument) {
+        this.parentDocument = parentDocument;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public String getCoverImageUrl() {
+        return coverImageUrl;
+    }
+
+    public void setCoverImageUrl(String coverImageUrl) {
+        this.coverImageUrl = coverImageUrl;
+    }
+
+    public Double getPositionOrder() {
+        return positionOrder;
+    }
+
+    public void setPositionOrder(Double positionOrder) {
+        this.positionOrder = positionOrder;
     }
 }

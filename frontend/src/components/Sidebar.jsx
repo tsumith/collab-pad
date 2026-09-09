@@ -1,21 +1,33 @@
 import { useEffect, useState } from 'react';
-import { Home, Server, Users, Settings, BookOpen } from 'lucide-react';
+import { Home, Server, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import api from '../api';
 
-export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange }) {
+export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange, onOpenDoc }) {
   const [workspaces, setWorkspaces] = useState([]);
+  const [documentTree, setDocumentTree] = useState([]);
   
   useEffect(() => {
-    // Fetch user's workspaces from the API
     api.get('/workspaces')
       .then(res => {
         setWorkspaces(res.data);
         if (res.data.length > 0 && !activeWorkspaceId) {
-          onWorkspaceChange(res.data[0].id); // Auto-select the first one
+          onWorkspaceChange(res.data[0].id);
         }
       })
       .catch(err => console.error("Failed to load workspaces", err));
   }, [activeWorkspaceId, onWorkspaceChange]);
+
+  useEffect(() => {
+    if (activeWorkspaceId) {
+      api.get(`/documents/tree?workspaceId=${activeWorkspaceId}`)
+        .then(res => {
+          setDocumentTree(res.data);
+        })
+        .catch(err => console.error("Failed to load document tree", err));
+    } else {
+      setDocumentTree([]);
+    }
+  }, [activeWorkspaceId]);
 
   return (
     <aside className="sidebar">
@@ -51,6 +63,18 @@ export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange
         </button>
       </nav>
 
+      <div style={{ flex: 2, overflowY: 'auto', padding: '10px 0' }}>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '0 10px', marginBottom: '10px' }}>Documents</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {documentTree.map(node => (
+            <TreeItem key={node.id} node={node} level={0} onOpenDoc={onOpenDoc} />
+          ))}
+          {documentTree.length === 0 && (
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '0 10px' }}>No documents yet.</span>
+          )}
+        </div>
+      </div>
+
       <div style={{ marginTop: 'auto' }}>
         <button className="nav-button">
           <Settings size={18} />
@@ -58,5 +82,61 @@ export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange
         </button>
       </div>
     </aside>
+  );
+}
+
+function TreeItem({ node, level, onOpenDoc }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasChildren = node.children && node.children.length > 0;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div 
+        className="nav-button" 
+        style={{ 
+          paddingLeft: `${(level * 12) + 10}px`, 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '5px',
+          cursor: 'pointer'
+        }}
+      >
+        <span 
+          style={{ display: 'flex', alignItems: 'center', width: '16px', height: '16px', justifyContent: 'center' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+          }}
+        >
+          {hasChildren ? (
+            expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
+          ) : (
+            <span style={{ width: '14px' }}></span>
+          )}
+        </span>
+
+        <div 
+          style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1 }}
+          onClick={() => onOpenDoc && onOpenDoc(node.id)}
+        >
+          {node.icon ? (
+            <span>{node.icon}</span>
+          ) : (
+            <FileText size={14} color="var(--text-secondary)" />
+          )}
+          <span style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {node.title}
+          </span>
+        </div>
+      </div>
+
+      {expanded && hasChildren && (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {node.children.map(child => (
+            <TreeItem key={child.id} node={child} level={level + 1} onOpenDoc={onOpenDoc} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

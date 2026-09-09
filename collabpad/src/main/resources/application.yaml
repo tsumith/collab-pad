@@ -20,10 +20,8 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      # Automatically create our tables from our Java Entities!
       ddl-auto: update
     show-sql: true
     
-  # We will leave Flyway disabled for now so Hibernate handles the initial schema
   flyway:
     enabled: false

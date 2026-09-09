@@ -47,6 +47,7 @@ function App() {
         onGoHome={handleGoHome} 
         activeWorkspaceId={activeWorkspaceId} 
         onWorkspaceChange={setActiveWorkspaceId} 
+        onOpenDoc={handleOpenDoc}
       />
       
       <main className="main-content">

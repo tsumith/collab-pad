@@ -2,6 +2,7 @@ package com.sumith.collabpad.controller;
 
 import com.sumith.collabpad.dto.DocumentRequest;
 import com.sumith.collabpad.dto.DocumentResponse;
+import com.sumith.collabpad.dto.DocumentNodeResponse;
 import com.sumith.collabpad.service.DocumentService;
 import com.sumith.collabpad.service.UserService;
 import com.sumith.collabpad.entity.User;
@@ -16,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/documents")
-@CrossOrigin(origins = "*") // Added to allow our React app to access the API!
+@CrossOrigin(origins = "*")
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -32,11 +33,8 @@ public class DocumentController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody DocumentRequest request) {
 
-        // Extract the tenant_id from JWT
         Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
 
-        // Dynamically fetch or create the user in our Postgres Database based on their
-        // Keycloak Token!
         User user = userService.getOrCreateUserFromJwt(jwt);
         Long authorId = user.getId();
 
@@ -60,6 +58,15 @@ public class DocumentController {
         Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
         List<DocumentResponse> responses = documentService.getAllDocuments(tenantId, workspaceId);
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/tree")
+    public ResponseEntity<List<DocumentNodeResponse>> getDocumentTree(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam Long workspaceId) {
+        Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
+        List<DocumentNodeResponse> tree = documentService.getDocumentTree(tenantId, workspaceId);
+        return ResponseEntity.ok(tree);
     }
 
     @PutMapping("/{id}")

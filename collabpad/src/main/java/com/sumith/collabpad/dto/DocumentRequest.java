@@ -12,5 +12,10 @@ public record DocumentRequest(
         String content,
         
         @NotNull(message = "Workspace ID is required") 
-        Long workspaceId
+        Long workspaceId,
+        
+        Long parentId,
+        String icon,
+        String coverImageUrl,
+        Double positionOrder
 ) {}
