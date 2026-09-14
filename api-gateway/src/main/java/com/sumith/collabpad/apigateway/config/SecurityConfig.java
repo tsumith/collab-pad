@@ -18,14 +18,15 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
-            .csrf(ServerHttpSecurity.CsrfSpec::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeExchange(exchanges -> exchanges
-                .pathMatchers("/actuator/**").permitAll() // Allow health checks
-                .anyExchange().authenticated() // EVERY other request requires a valid JWT from Keycloak!
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
-            
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/actuator/**").permitAll() // Allow health checks
+                        .anyExchange().authenticated() // EVERY other request requires a valid JWT from Keycloak
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
+                }));
+
         return http.build();
     }
 

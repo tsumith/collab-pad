@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Home, Server, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText } from 'lucide-react';
-import api from '../api';
-
-export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange, onOpenDoc }) {
+import { workspaceService } from '../services/workspaceService';
+import { documentService } from '../services/documentService';export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange, onOpenDoc }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [documentTree, setDocumentTree] = useState([]);
   
   useEffect(() => {
-    api.get('/workspaces')
-      .then(res => {
-        setWorkspaces(res.data);
-        if (res.data.length > 0 && !activeWorkspaceId) {
-          onWorkspaceChange(res.data[0].id);
+    workspaceService.getWorkspaces()
+      .then(data => {
+        setWorkspaces(data);
+        if (data.length > 0 && !activeWorkspaceId) {
+          onWorkspaceChange(data[0].id);
         }
       })
       .catch(err => console.error("Failed to load workspaces", err));
@@ -19,9 +18,9 @@ export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange
 
   useEffect(() => {
     if (activeWorkspaceId) {
-      api.get(`/documents/tree?workspaceId=${activeWorkspaceId}`)
-        .then(res => {
-          setDocumentTree(res.data);
+      documentService.getDocumentTree(activeWorkspaceId)
+        .then(data => {
+          setDocumentTree(data);
         })
         .catch(err => console.error("Failed to load document tree", err));
     } else {

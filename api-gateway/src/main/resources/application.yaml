@@ -1,5 +1,5 @@
 server:
-  port: 8080 # The gateway takes the main port 8080!
+  port: 8080
 
 spring:
   application:
@@ -7,10 +7,10 @@ spring:
   cloud:
     gateway:
       default-filters:
-        - TokenRelay # Automatically passes the JWT down to the core-api
+        - TokenRelay
       routes:
         - id: core-api-route
-          uri: http://localhost:8081 # Forwards traffic to our backend
+          uri: http://localhost:8081
           predicates:
             - Path=/api/**
   security:

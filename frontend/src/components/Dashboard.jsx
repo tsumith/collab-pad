@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, FileText } from 'lucide-react';
-import api from '../api';
+import { documentService } from '../services/documentService';
 
 export default function Dashboard({ workspaceId, onOpenDoc }) {
   const [documents, setDocuments] = useState([]);
@@ -14,8 +14,8 @@ export default function Dashboard({ workspaceId, onOpenDoc }) {
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/documents?workspaceId=${workspaceId}`);
-      setDocuments(res.data);
+      const data = await documentService.getDocumentsByWorkspace(workspaceId);
+      setDocuments(data);
     } catch (err) {
       console.error("Failed to fetch documents", err);
     } finally {
@@ -28,14 +28,14 @@ export default function Dashboard({ workspaceId, onOpenDoc }) {
     if (!newTitle.trim()) return;
     
     try {
-      const res = await api.post('/documents', {
-        title: newTitle,
-        content: '',
-        workspaceId: workspaceId
-      });
-      setDocuments([...documents, res.data]);
+      const data = await documentService.createDocument(
+        newTitle,
+        '',
+        workspaceId
+      );
+      setDocuments([...documents, data]);
       setNewTitle('');
-      onOpenDoc(res.data.id);
+      onOpenDoc(data.id);
     } catch (err) {
       console.error("Failed to create document", err);
     }

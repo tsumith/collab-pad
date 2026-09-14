@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Cloud, Check } from 'lucide-react';
-import api from '../api';
+import { documentService } from '../services/documentService';
 
 export default function DocumentEditor({ documentId, onBack }) {
   const [doc, setDoc] = useState({ title: '', content: '' });
@@ -13,8 +13,8 @@ export default function DocumentEditor({ documentId, onBack }) {
 
   const fetchDoc = async () => {
     try {
-      const res = await api.get(`/documents/${documentId}`);
-      setDoc(res.data);
+      const data = await documentService.getDocumentById(documentId);
+      setDoc(data);
     } catch (err) {
       console.error("Failed to load document", err);
     }
@@ -23,12 +23,13 @@ export default function DocumentEditor({ documentId, onBack }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await api.put(`/documents/${documentId}`, {
-        title: doc.title,
-        content: doc.content,
-        workspaceId: doc.workspaceId
-      });
-      setDoc(res.data);
+      const data = await documentService.updateDocument(
+        documentId,
+        doc.title,
+        doc.content,
+        doc.workspaceId
+      );
+      setDoc(data);
       setLastSaved(new Date());
     } catch (err) {
       console.error("Failed to save", err);
