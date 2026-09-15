@@ -34,29 +34,8 @@ public class UserService {
 
         final String finalEmail = email;
 
-        return userRepository.findByEmail(finalEmail).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setEmail(jwt.getClaimAsString("email") != null ? jwt.getClaimAsString("email") : finalEmail);
-            String name = jwt.getClaimAsString("name");
-            if (name == null) {
-                name = jwt.getClaimAsString("preferred_username");
-            }
-            // Instead of extracting a hardcoded tenant from Keycloak,
-            // we instantly auto-provision a personal Tenant for them! (Notion style)
-            Tenant newTenant = new Tenant();
-            newTenant.setName(newUser.getName() + "'s Workspace");
-            newTenant = tenantRepository.save(newTenant);
-
-            // Create a default Workspace inside their new Tenant
-            Workspace newWorkspace = new Workspace();
-            newWorkspace.setName("General");
-            newWorkspace.setTenant(newTenant);
-            workspaceRepository.save(newWorkspace);
-
-            newUser.setRole("ROLE_TENANT_USER");
-            newUser.setTenant(newTenant);
-
-            return userRepository.save(newUser);
-        });
+        return userRepository.findByEmail(finalEmail).orElseThrow(() -> 
+            new RuntimeException("USER_NOT_ENROLLED")
+        );
     }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Home, Server, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { workspaceService } from '../services/workspaceService';
-import { documentService } from '../services/documentService';export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange, onOpenDoc }) {
+import { documentService } from '../services/documentService';export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange, onOpenDoc, onNeedsOnboarding }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [documentTree, setDocumentTree] = useState([]);
   
@@ -13,8 +13,13 @@ import { documentService } from '../services/documentService';export default fun
           onWorkspaceChange(data[0].id);
         }
       })
-      .catch(err => console.error("Failed to load workspaces", err));
-  }, [activeWorkspaceId, onWorkspaceChange]);
+      .catch(err => {
+        console.error("Failed to load workspaces", err);
+        if (err.response?.status === 500 || err.response?.status === 401 || err.response?.status === 403) {
+           if (onNeedsOnboarding) onNeedsOnboarding();
+        }
+      });
+  }, [activeWorkspaceId, onWorkspaceChange, onNeedsOnboarding]);
 
   useEffect(() => {
     if (activeWorkspaceId) {
