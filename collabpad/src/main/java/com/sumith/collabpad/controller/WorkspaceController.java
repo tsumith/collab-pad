@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/workspaces")
-@CrossOrigin(origins = "*") // Allow React app to fetch
 public class WorkspaceController {
 
     private final WorkspaceService workspaceService;

@@ -3,6 +3,7 @@ package com.sumith.collabpad.entity;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import com.sumith.collabpad.enums.Role;
 
 @Entity
 @Table(name = "users")
@@ -21,10 +22,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    // We store roles like "ROLE_ADMIN" or "ROLE_TENANT_USER" as a simple string for
-    // now.
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role;
+    private Role role;
 
     // FetchType.LAZY loads the Tenant data from the DB until we explicitly ask for
     // it, saves memory.
@@ -78,11 +78,11 @@ public class User {
         this.email = email;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 

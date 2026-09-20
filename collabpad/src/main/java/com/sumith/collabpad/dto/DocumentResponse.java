@@ -11,5 +11,6 @@ public record DocumentResponse(
     String coverImageUrl,
     Double positionOrder,
     OffsetDateTime createdAt,
-    OffsetDateTime updatedAt
+    OffsetDateTime updatedAt,
+    Long workspaceId
 ) {}

@@ -51,10 +51,17 @@ function App() {
     setCurrentView('dashboard');
   };
 
+  const handleGoTeam = () => {
+    setSelectedDocId(null);
+    setCurrentView('team');
+  };
+
   return (
     <div className="app-container">
       <Sidebar 
+        currentView={currentView}
         onGoHome={handleGoHome} 
+        onGoTeam={handleGoTeam}
         activeWorkspaceId={activeWorkspaceId} 
         onWorkspaceChange={setActiveWorkspaceId} 
         onOpenDoc={handleOpenDoc}
@@ -71,7 +78,12 @@ function App() {
             </button>
         </div>
 
-        {currentView === 'dashboard' ? (
+        {currentView === 'team' ? (
+          <div style={{ padding: '20px' }}>
+            <h2 style={{ fontSize: '2rem', marginBottom: '8px' }}>Team Directory</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Coming soon...</p>
+          </div>
+        ) : currentView === 'dashboard' ? (
           activeWorkspaceId ? (
             <Dashboard workspaceId={activeWorkspaceId} onOpenDoc={handleOpenDoc} />
           ) : (

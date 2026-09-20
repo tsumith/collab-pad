@@ -22,8 +22,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/actuator/**").permitAll() // Allow health checks
-                        .anyExchange().authenticated() // EVERY other request requires a valid JWT from Keycloak
-                )
+                        .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
                 }));
 

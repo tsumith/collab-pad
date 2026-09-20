@@ -2,6 +2,7 @@ package com.sumith.collabpad.service;
 
 import com.sumith.collabpad.dto.EnrollmentRequest;
 import com.sumith.collabpad.entity.Document;
+import com.sumith.collabpad.enums.Role;
 import com.sumith.collabpad.entity.Tenant;
 import com.sumith.collabpad.entity.User;
 import com.sumith.collabpad.entity.Workspace;
@@ -25,8 +26,8 @@ public class OnboardingService {
     private final UserService userService;
 
     public OnboardingService(UserRepository userRepository, TenantRepository tenantRepository,
-                             WorkspaceRepository workspaceRepository, DocumentRepository documentRepository,
-                             UserService userService) {
+            WorkspaceRepository workspaceRepository, DocumentRepository documentRepository,
+            UserService userService) {
         this.userRepository = userRepository;
         this.tenantRepository = tenantRepository;
         this.workspaceRepository = workspaceRepository;
@@ -40,18 +41,16 @@ public class OnboardingService {
         if (email == null) {
             email = jwt.getClaimAsString("preferred_username") + "@example.com";
         }
-        
+
         final String finalEmail = email;
-        
+
         User user = userRepository.findByEmail(finalEmail).orElse(null);
         Tenant tenant;
-        
+
         if (user == null) {
-            // First time ever seeing this user
             tenant = new Tenant();
             tenant.setName(request.getCompanyName());
             tenant = tenantRepository.save(tenant);
-            
             user = new User();
             user.setEmail(finalEmail);
             String name = jwt.getClaimAsString("name");
@@ -59,20 +58,16 @@ public class OnboardingService {
                 name = jwt.getClaimAsString("preferred_username");
             }
             user.setName(name);
-            user.setRole("ROLE_COMPANY_ADMIN");
+            user.setRole(Role.ROLE_COMPANY_ADMIN);
             user.setTenant(tenant);
             user = userRepository.save(user);
         } else {
-            // User exists (maybe they got a personal tenant via fallback), update their tenant
             tenant = user.getTenant();
             tenant.setName(request.getCompanyName());
             tenantRepository.save(tenant);
-            
-            user.setRole("ROLE_COMPANY_ADMIN");
+            user.setRole(Role.ROLE_COMPANY_ADMIN);
             userRepository.save(user);
         }
-
-        // Bootstrap selected workspaces
         List<String> departments = request.getSelectedDepartments();
         if (departments != null && !departments.isEmpty()) {
             for (String dept : departments) {
@@ -81,7 +76,7 @@ public class OnboardingService {
                 workspace.setTenant(tenant);
                 workspace.setOwner(user);
                 workspace = workspaceRepository.save(workspace);
-                
+
                 Document doc = new Document();
                 doc.setTitle("Welcome to " + dept);
                 doc.setContent("This is the default starting page for the " + dept + " department.");
@@ -91,7 +86,7 @@ public class OnboardingService {
                 documentRepository.save(doc);
             }
         }
-        
+
         return user;
     }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Home, Server, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { workspaceService } from '../services/workspaceService';
-import { documentService } from '../services/documentService';export default function Sidebar({ onGoHome, activeWorkspaceId, onWorkspaceChange, onOpenDoc, onNeedsOnboarding }) {
+import { documentService } from '../services/documentService';export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspaceId, onWorkspaceChange, onOpenDoc, onNeedsOnboarding }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [documentTree, setDocumentTree] = useState([]);
   
@@ -56,12 +56,12 @@ import { documentService } from '../services/documentService';export default fun
       </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-        <button className="nav-button active" onClick={onGoHome}>
+        <button className={`nav-button ${currentView === 'dashboard' ? 'active' : ''}`} onClick={onGoHome}>
           <Home size={18} />
           <span>Dashboard</span>
         </button>
         
-        <button className="nav-button">
+        <button className={`nav-button ${currentView === 'team' ? 'active' : ''}`} onClick={onGoTeam}>
           <Users size={18} />
           <span>Team Directory</span>
         </button>

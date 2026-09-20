@@ -1,12 +1,12 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: collabpad
     
-  server:
-    port: 8081
-
   datasource:
-    url: jdbc:postgresql://localhost:5432/collab_db
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/collab_db
     username: postgres
     password: collabpassword
     driver-class-name: org.postgresql.Driver
@@ -15,7 +15,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8082/realms/collabpad-realm
+          issuer-uri: http://${KEYCLOAK_HOST:localhost}:8082/realms/collabpad-realm
     
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
