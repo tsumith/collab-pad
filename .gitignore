@@ -2,7 +2,6 @@
 
 # Server build outputs
 server/target/
-api-gateway/target/
 server/*.releaseBackup
 
 # Secrets

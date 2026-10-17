@@ -1,10 +1,10 @@
 # CollabPad
 
-**CollabPad** is an in-development multi-tenant SaaS knowledge-management platform. It provides hierarchical document authoring and departmental workspaces within a cohesive distributed system. Built with scalability and performance in mind, this project demonstrates modern architectural patterns including API gateways, robust multi-tenancy, and OAuth2 security.
+**CollabPad** is an in-development multi-tenant SaaS knowledge-management platform. It provides hierarchical document authoring and departmental workspaces within a cohesive distributed system. Built with scalability and performance in mind, this project demonstrates modern architectural patterns including robust multi-tenancy and OAuth2 security.
 
 ## 🏗️ Architecture Overview
 
-The platform is designed as a distributed system capable of handling strict data isolation across multiple tenants. The core flow involves a Spring Cloud Gateway routing authenticated requests to a Spring Boot Core API backed by a multi-tenant PostgreSQL database.
+The platform is designed as a distributed system capable of handling strict data isolation across multiple tenants. The core flow involves a React frontend communicating directly with a Spring Boot Core API backed by a multi-tenant PostgreSQL database.
 
 ![System Architecture](./assets/component_diagram.png)
 
@@ -13,7 +13,7 @@ The platform is designed as a distributed system capable of handling strict data
 * **Public Multi-Tenant SaaS Architecture:** A  multi-tenancy model with self-serve onboarding, strict data segregation in PostgreSQL, and automated tenant provisioning.
 * **Hierarchical Document Management:** Core REST APIs for managing nested, recursive document trees and departmental workspaces.
 * **Advanced Access Control:** Role-based access management isolated across tenants and departmental boundaries using Keycloak (OAuth2 / OpenID Connect).
-* **API Gateway Routing:** Spring Cloud Gateway acting as an edge proxy for centralized JWT validation and dynamic routing to backend microservices.
+* **Direct Resource Server Security:** Centralized JWT validation, tenant resolution, and CORS management directly on the Spring Boot Core API.
 
 ## 🧠 System Design & Data Models
 
@@ -37,14 +37,13 @@ The backend exposes RESTful APIs to manage the platform's state:
 
 ## 🛠️ Tech Stack
 
-* **Backend:** Java 17, Spring Boot 3.4+, Spring Cloud Gateway, Hibernate / JPA
+* **Backend:** Java 17, Spring Boot 3.4+, Hibernate / JPA
 * **Frontend:** React 19, Vite, Axios
 * **Database:** PostgreSQL (Multi-Tenant)
 * **Identity & Access Management:** Keycloak (OAuth2 / OpenID Connect)
 
 ## 📂 Project Structure
 
-* `api-gateway/`: Spring Cloud Gateway acting as the public-facing edge proxy.
 * `collabpad/`: The Core API Spring Boot service for tenant onboarding, workspace management, and document hierarchies.
 * `frontend/`: The React + Vite client providing the workspace UI.
 * `local-environment/`: Local setup files, including Keycloak realm configuration.
@@ -67,18 +66,12 @@ docker-compose up -d
 ```
 *Note: Keycloak will automatically import the pre-configured realm from the `local-environment` directory.*
 
-### 2. Start the Backend Services
-Navigate to each backend service directory and start them using Maven:
+### 2. Start the Backend Service
+Navigate to the backend service directory and start it using Maven:
 
 **Core API:**
 ```bash
 cd collabpad
-./mvnw spring-boot:run
-```
-
-**API Gateway:**
-```bash
-cd api-gateway
 ./mvnw spring-boot:run
 ```
 
