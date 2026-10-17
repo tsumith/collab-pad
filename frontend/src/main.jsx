@@ -9,18 +9,16 @@ const oidcConfig = {
   client_id: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
   redirect_uri: import.meta.env.VITE_APP_URL,
   onSigninCallback: () => {
-      window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-      )
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    )
   }
 };
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <AuthProvider {...oidcConfig}>
-      <App />
-    </AuthProvider>
-  </StrictMode>,
+  <AuthProvider {...oidcConfig}>
+    <App />
+  </AuthProvider>
 )

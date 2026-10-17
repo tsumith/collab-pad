@@ -32,9 +32,8 @@ public class DocumentController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody DocumentRequest request) {
 
-        Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
-
         User user = userService.getOrCreateUserFromJwt(jwt);
+        Long tenantId = user.getTenant().getId();
         Long authorId = user.getId();
 
         DocumentResponse response = documentService.createDocument(tenantId, request.workspaceId(), authorId, request);
@@ -45,7 +44,7 @@ public class DocumentController {
     public ResponseEntity<DocumentResponse> getDocument(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long id) {
-        Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
+        Long tenantId = userService.getOrCreateUserFromJwt(jwt).getTenant().getId();
         DocumentResponse response = documentService.getDocumentById(tenantId, id);
         return ResponseEntity.ok(response);
     }
@@ -54,7 +53,7 @@ public class DocumentController {
     public ResponseEntity<List<DocumentResponse>> getAllDocuments(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam Long workspaceId) {
-        Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
+        Long tenantId = userService.getOrCreateUserFromJwt(jwt).getTenant().getId();
         List<DocumentResponse> responses = documentService.getAllDocuments(tenantId, workspaceId);
         return ResponseEntity.ok(responses);
     }
@@ -63,7 +62,7 @@ public class DocumentController {
     public ResponseEntity<List<DocumentNodeResponse>> getDocumentTree(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam Long workspaceId) {
-        Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
+        Long tenantId = userService.getOrCreateUserFromJwt(jwt).getTenant().getId();
         List<DocumentNodeResponse> tree = documentService.getDocumentTree(tenantId, workspaceId);
         return ResponseEntity.ok(tree);
     }
@@ -73,7 +72,7 @@ public class DocumentController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long id,
             @Valid @RequestBody DocumentRequest request) {
-        Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
+        Long tenantId = userService.getOrCreateUserFromJwt(jwt).getTenant().getId();
         DocumentResponse response = documentService.updateDocument(tenantId, id, request);
         return ResponseEntity.ok(response);
     }
@@ -82,7 +81,7 @@ public class DocumentController {
     public ResponseEntity<Void> deleteDocument(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long id) {
-        Long tenantId = Long.parseLong(jwt.getClaimAsStringList("tenant_id").get(0));
+        Long tenantId = userService.getOrCreateUserFromJwt(jwt).getTenant().getId();
         documentService.deleteDocument(tenantId, id);
         return ResponseEntity.noContent().build();
     }

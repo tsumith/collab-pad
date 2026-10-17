@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
-import { Home, Server, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText } from 'lucide-react';
+import { Home, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { workspaceService } from '../services/workspaceService';
-import { documentService } from '../services/documentService';export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspaceId, onWorkspaceChange, onOpenDoc, onNeedsOnboarding }) {
+import { documentService } from '../services/documentService';
+export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspaceId, onWorkspaceChange, onOpenDoc, onNeedsOnboarding }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [documentTree, setDocumentTree] = useState([]);
-  
+
   useEffect(() => {
     workspaceService.getWorkspaces()
       .then(data => {
         setWorkspaces(data);
-        if (data.length > 0 && !activeWorkspaceId) {
-          onWorkspaceChange(data[0].id);
+        if (data.length > 0) {
+          if (!activeWorkspaceId) {
+            onWorkspaceChange(data[0].id);
+          }
+        } else {
+          if (onNeedsOnboarding) onNeedsOnboarding();
         }
       })
       .catch(err => {
         console.error("Failed to load workspaces", err);
         if (err.response?.status === 500 || err.response?.status === 401 || err.response?.status === 403) {
-           if (onNeedsOnboarding) onNeedsOnboarding();
+          if (onNeedsOnboarding) onNeedsOnboarding();
         }
       });
   }, [activeWorkspaceId, onWorkspaceChange, onNeedsOnboarding]);
@@ -44,7 +49,7 @@ import { documentService } from '../services/documentService';export default fun
 
       <div style={{ padding: '0 10px', marginBottom: '20px' }}>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>Current Workspace</p>
-        <select 
+        <select
           style={{ width: '100%', padding: '8px', borderRadius: '4px', backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
           value={activeWorkspaceId || ''}
           onChange={(e) => onWorkspaceChange(Number(e.target.value))}
@@ -60,7 +65,7 @@ import { documentService } from '../services/documentService';export default fun
           <Home size={18} />
           <span>Dashboard</span>
         </button>
-        
+
         <button className={`nav-button ${currentView === 'team' ? 'active' : ''}`} onClick={onGoTeam}>
           <Users size={18} />
           <span>Team Directory</span>
@@ -95,17 +100,17 @@ function TreeItem({ node, level, onOpenDoc }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div 
-        className="nav-button" 
-        style={{ 
-          paddingLeft: `${(level * 12) + 10}px`, 
-          display: 'flex', 
-          alignItems: 'center', 
+      <div
+        className="nav-button"
+        style={{
+          paddingLeft: `${(level * 12) + 10}px`,
+          display: 'flex',
+          alignItems: 'center',
           gap: '5px',
           cursor: 'pointer'
         }}
       >
-        <span 
+        <span
           style={{ display: 'flex', alignItems: 'center', width: '16px', height: '16px', justifyContent: 'center' }}
           onClick={(e) => {
             e.stopPropagation();
@@ -119,7 +124,7 @@ function TreeItem({ node, level, onOpenDoc }) {
           )}
         </span>
 
-        <div 
+        <div
           style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1 }}
           onClick={() => onOpenDoc && onOpenDoc(node.id)}
         >
