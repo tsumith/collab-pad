@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { User } from 'oidc-client-ts';
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_GATEWAY_URL}/api/v1/`,
@@ -8,15 +7,15 @@ const api = axios.create({
   }
 });
 
-api.interceptors.request.use((config) => {
-  const authority = import.meta.env.VITE_KEYCLOAK_AUTHORITY;
-  const clientId = import.meta.env.VITE_KEYCLOAK_CLIENT_ID;
-  const oidcStorage = sessionStorage.getItem(`oidc.user:${authority}:${clientId}`)
-
-  if (oidcStorage) {
-    const user = User.fromStorageString(oidcStorage);
-    if (user && user.access_token) {
-      config.headers['Authorization'] = `Bearer ${user.access_token}`;
+api.interceptors.request.use(async (config) => {
+  if (window.Clerk && window.Clerk.session) {
+    try {
+      const token = await window.Clerk.session.getToken();
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    } catch (err) {
+      console.error("Failed to retrieve Clerk session token", err);
     }
   }
   return config;

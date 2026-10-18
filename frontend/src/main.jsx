@@ -1,24 +1,17 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { AuthProvider } from "react-oidc-context";
+import { ClerkProvider } from '@clerk/react'
 import App from './App.jsx'
 import './index.css'
 
-const oidcConfig = {
-  authority: import.meta.env.VITE_KEYCLOAK_AUTHORITY,
-  client_id: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
-  redirect_uri: import.meta.env.VITE_APP_URL,
-  onSigninCallback: () => {
-    window.history.replaceState(
-      {},
-      document.title,
-      window.location.pathname
-    )
-  }
-};
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Clerk Publishable Key in .env")
+}
 
 createRoot(document.getElementById('root')).render(
-  <AuthProvider {...oidcConfig}>
+  <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
     <App />
-  </AuthProvider>
+  </ClerkProvider>
 )
+

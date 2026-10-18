@@ -39,7 +39,12 @@ public class OnboardingService {
     public User enrollCompany(Jwt jwt, EnrollmentRequest request) {
         String email = jwt.getClaimAsString("email");
         if (email == null) {
-            email = jwt.getClaimAsString("preferred_username") + "@example.com";
+            String preferredUsername = jwt.getClaimAsString("preferred_username");
+            if (preferredUsername != null) {
+                email = preferredUsername + "@example.com";
+            } else {
+                email = jwt.getSubject() + "@clerk.user";
+            }
         }
 
         final String finalEmail = email;
@@ -56,6 +61,9 @@ public class OnboardingService {
             String name = jwt.getClaimAsString("name");
             if (name == null) {
                 name = jwt.getClaimAsString("preferred_username");
+            }
+            if (name == null) {
+                name = "Admin";
             }
             user.setName(name);
             user.setRole(Role.ROLE_COMPANY_ADMIN);

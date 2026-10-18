@@ -28,14 +28,16 @@ public class UserService {
     public User getOrCreateUserFromJwt(Jwt jwt) {
         String email = jwt.getClaimAsString("email");
         if (email == null) {
-            // Fallback if email is missing (for our dummy testuser)
-            email = jwt.getClaimAsString("preferred_username") + "@example.com";
+            String preferredUsername = jwt.getClaimAsString("preferred_username");
+            if (preferredUsername != null) {
+                email = preferredUsername + "@example.com";
+            } else {
+                email = jwt.getSubject() + "@clerk.user";
+            }
         }
 
         final String finalEmail = email;
 
-        return userRepository.findByEmail(finalEmail).orElseThrow(() -> 
-            new RuntimeException("USER_NOT_ENROLLED")
-        );
+        return userRepository.findByEmail(finalEmail).orElseThrow(() -> new RuntimeException("USER_NOT_ENROLLED"));
     }
 }
