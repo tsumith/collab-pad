@@ -1,10 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Home, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText } from 'lucide-react';
+import { Home, Users, Settings, BookOpen, ChevronRight, ChevronDown, FileText, X } from 'lucide-react';
 import { workspaceService } from '../services/workspaceService';
 import { documentService } from '../services/documentService';
-export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspaceId, onWorkspaceChange, onOpenDoc, onNeedsOnboarding }) {
+export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspaceId, onWorkspaceChange, onOpenDoc, onNeedsOnboarding, isOpen, onClose }) {
   const [workspaces, setWorkspaces] = useState([]);
   const [documentTree, setDocumentTree] = useState([]);
+
+  const handleHome = () => {
+    onGoHome();
+    if (onClose) onClose();
+  };
+
+  const handleTeam = () => {
+    onGoTeam();
+    if (onClose) onClose();
+  };
+
+  const handleDoc = (id) => {
+    onOpenDoc(id);
+    if (onClose) onClose();
+  };
 
   useEffect(() => {
     workspaceService.getWorkspaces()
@@ -39,12 +54,21 @@ export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspa
   }, [activeWorkspaceId]);
 
   return (
-    <aside className="sidebar">
-      <div className="title-logo">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <div className="title-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <BookOpen size={24} color="var(--accent-color)" />
-          KnowledgeHub
+          CollabPad
         </span>
+        {onClose && (
+          <button
+            className="icon-button mobile-close-button"
+            onClick={onClose}
+            aria-label="Close Sidebar"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       <div style={{ padding: '0 10px', marginBottom: '20px' }}>
@@ -61,12 +85,12 @@ export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspa
       </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-        <button className={`nav-button ${currentView === 'dashboard' ? 'active' : ''}`} onClick={onGoHome}>
+        <button className={`nav-button ${currentView === 'dashboard' ? 'active' : ''}`} onClick={handleHome}>
           <Home size={18} />
           <span>Dashboard</span>
         </button>
 
-        <button className={`nav-button ${currentView === 'team' ? 'active' : ''}`} onClick={onGoTeam}>
+        <button className={`nav-button ${currentView === 'team' ? 'active' : ''}`} onClick={handleTeam}>
           <Users size={18} />
           <span>Team Directory</span>
         </button>
@@ -76,7 +100,7 @@ export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspa
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '0 10px', marginBottom: '10px' }}>Documents</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {documentTree.map(node => (
-            <TreeItem key={node.id} node={node} level={0} onOpenDoc={onOpenDoc} />
+            <TreeItem key={node.id} node={node} level={0} onOpenDoc={handleDoc} />
           ))}
           {documentTree.length === 0 && (
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '0 10px' }}>No documents yet.</span>

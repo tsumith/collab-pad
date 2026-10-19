@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth, useUser, SignIn, UserButton } from "@clerk/react";
+import { Menu, BookOpen } from 'lucide-react';
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
 import DocumentEditor from './components/DocumentEditor'
@@ -12,6 +13,7 @@ function App() {
   const [selectedDocId, setSelectedDocId] = useState(null);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   if (!isLoaded) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading Identity...</div>;
@@ -56,7 +58,33 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Mobile Top Navbar */}
+      <header className="mobile-header">
+        <button
+          className="icon-button"
+          onClick={() => setIsSidebarOpen(true)}
+          aria-label="Open Navigation Menu"
+        >
+          <Menu size={22} />
+        </button>
+        <span style={{ fontWeight: 600, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <BookOpen size={20} color="var(--accent-color)" />
+          CollabPad
+        </span>
+        <UserButton />
+      </header>
+
+      {/* Backdrop overlay for mobile drawer */}
+      {isSidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
         currentView={currentView}
         onGoHome={handleGoHome}
         onGoTeam={handleGoTeam}
@@ -67,7 +95,7 @@ function App() {
       />
 
       <main className="main-content">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+        <div className="desktop-user-header" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
           <span style={{ color: 'var(--text-secondary)' }}>
             Logged in as: {user?.primaryEmailAddress?.emailAddress || user?.fullName}
           </span>

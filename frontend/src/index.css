@@ -30,6 +30,7 @@ body {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 .sidebar {
@@ -39,6 +40,20 @@ body {
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.mobile-header {
+  display: none;
+}
+
+.mobile-close-button {
+  display: none;
 }
 
 .main-content {
@@ -46,6 +61,72 @@ body {
   padding: 48px;
   overflow-y: auto;
   background-color: var(--bg-main);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: 56px;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+  }
+
+  .mobile-close-button {
+    display: flex;
+  }
+
+  .desktop-user-header {
+    display: none !important;
+  }
+
+  .main-content {
+    padding: 20px 16px;
+    height: calc(100vh - 56px);
+  }
+
+  .editor-title-input {
+    font-size: 1.75rem !important;
+    margin-bottom: 16px !important;
+  }
 }
 
 /* Typography */
