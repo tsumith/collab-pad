@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://collab-pad.onrender.com';
+
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_GATEWAY_URL}/api/v1/`,
+  baseURL: `${BASE_URL.replace(/\/+$/, '')}/api/v1/`,
   headers: {
     'Content-Type': 'application/json',
   }
