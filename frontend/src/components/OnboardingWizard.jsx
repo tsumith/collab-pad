@@ -59,12 +59,12 @@ export default function OnboardingWizard({ userProfile, onComplete }) {
 
         <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
           <div>
-            <label style={{display: 'block', marginBottom: '8px', color: 'var(--text-secondary)'}}>Your Name (from Keycloak)</label>
+            <label style={{display: 'block', marginBottom: '8px', color: 'var(--text-secondary)'}}>Your Name</label>
             <input type="text" className="minimal-input" value={userProfile?.name || userProfile?.preferred_username || ''} disabled style={{opacity: 0.7}} />
           </div>
           
           <div>
-            <label style={{display: 'block', marginBottom: '8px', color: 'var(--text-secondary)'}}>Your Email (from Keycloak)</label>
+            <label style={{display: 'block', marginBottom: '8px', color: 'var(--text-secondary)'}}>Your Email</label>
             <input type="email" className="minimal-input" value={userProfile?.email || ''} disabled style={{opacity: 0.7}} />
           </div>
 

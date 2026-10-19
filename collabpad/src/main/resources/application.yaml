@@ -16,7 +16,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${CLERK_ISSUER_URI:http://${KEYCLOAK_HOST:localhost}:8082/realms/collabpad-realm}
+          issuer-uri: ${CLERK_ISSUER_URI}
     
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

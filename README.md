@@ -12,7 +12,7 @@ The platform is designed as a distributed system capable of handling strict data
 
 * **Public Multi-Tenant SaaS Architecture:** A  multi-tenancy model with self-serve onboarding, strict data segregation in PostgreSQL, and automated tenant provisioning.
 * **Hierarchical Document Management:** Core REST APIs for managing nested, recursive document trees and departmental workspaces.
-* **Advanced Access Control:** Role-based access management isolated across tenants and departmental boundaries using Keycloak (OAuth2 / OpenID Connect).
+* **Advanced Access Control:** Multi-tenant user provisioning and session authentication using Clerk (OAuth2 / OIDC).
 * **Direct Resource Server Security:** Centralized JWT validation, tenant resolution, and CORS management directly on the Spring Boot Core API.
 
 ## 🧠 System Design & Data Models
@@ -39,14 +39,15 @@ The backend exposes RESTful APIs to manage the platform's state:
 
 * **Backend:** Java 17, Spring Boot 3.4+, Hibernate / JPA
 * **Frontend:** React 19, Vite, Axios
-* **Database:** PostgreSQL (Multi-Tenant)
-* **Identity & Access Management:** Keycloak (OAuth2 / OpenID Connect)
+* **Database:** Cloud PostgreSQL (Neon.tech with `pgvector`)
+* **Identity & Access Management:** Clerk (OAuth2 / OpenID Connect)
+* **Deployment:** Docker on Render (Backend) & Vercel Edge CDN (Frontend)
 
 ## 📂 Project Structure
 
 * `collabpad/`: The Core API Spring Boot service for tenant onboarding, workspace management, and document hierarchies.
 * `frontend/`: The React + Vite client providing the workspace UI.
-* `local-environment/`: Local setup files, including Keycloak realm configuration.
+* `docs/`: Architecture documentation and migration guides.
 * `assets/`: Publicly tracked media and architecture diagrams.
 
 ## 🏁 Getting Started
@@ -55,16 +56,10 @@ The backend exposes RESTful APIs to manage the platform's state:
 
 Ensure you have the following installed:
 * [Java 17+](https://adoptium.net/)
-* [Node.js 18+](https://nodejs.org/)
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+* [Node.js 20+](https://nodejs.org/)
 
-### 1. Start Local Infrastructure
-The project relies on PostgreSQL and Keycloak for local development. Run them using Docker Compose:
-
-```bash
-docker-compose up -d
-```
-*Note: Keycloak will automatically import the pre-configured realm from the `local-environment` directory.*
+### 1. Configure Environment
+Set up your `.env` with your Neon database credentials and Clerk keys (see `.env.example`).
 
 ### 2. Start the Backend Service
 Navigate to the backend service directory and start it using Maven:
