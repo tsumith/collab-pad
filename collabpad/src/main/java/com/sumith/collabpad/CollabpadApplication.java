@@ -23,6 +23,9 @@ public class CollabpadApplication {
 
 		// Ensure DB_URL has jdbc: prefix required by Spring Boot JDBC driver
 		String dbUrl = System.getProperty("DB_URL");
+		if (dbUrl == null || dbUrl.isBlank()) {
+			dbUrl = System.getenv("DB_URL");
+		}
 		if (dbUrl != null && dbUrl.startsWith("postgresql://")) {
 			System.setProperty("DB_URL", "jdbc:" + dbUrl);
 		}
