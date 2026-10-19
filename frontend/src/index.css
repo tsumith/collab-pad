@@ -53,7 +53,7 @@ body {
 }
 
 .mobile-close-button {
-  display: none;
+  display: none !important;
 }
 
 .main-content {
@@ -111,7 +111,7 @@ body {
   }
 
   .mobile-close-button {
-    display: flex;
+    display: flex !important;
   }
 
   .desktop-user-header {

@@ -60,7 +60,7 @@ export default function Sidebar({ currentView, onGoHome, onGoTeam, activeWorkspa
           <BookOpen size={24} color="var(--accent-color)" />
           CollabPad
         </span>
-        {onClose && (
+        {isOpen && onClose && (
           <button
             className="icon-button mobile-close-button"
             onClick={onClose}
