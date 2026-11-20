@@ -8,7 +8,7 @@
 
 CollabPad uses a decoupled, cloud-ready architecture where the React SPA authenticates users through Clerk, forwards short-lived JWTs to the Spring Boot Core API, and the backend verifies the tokens directly against Clerk's JWKS endpoint before scoping all queries to the user's tenant in PostgreSQL.
 
-![CollabPad System Architecture](./assets/system_architecture.png)
+👉 **[View Complete Architecture Specification & Flowcharts →](docs/architecture.md)**
 
 ### Architectural Flow:
 1. **Client Tier:** React 19 + Vite SPA (deployed on Vercel Edge CDN). The frontend uses an Axios request interceptor (`src/api.js`) that dynamically extracts the active session token from `@clerk/react` and injects `Authorization: Bearer <JWT>` into every API call.
@@ -44,13 +44,27 @@ CollabPad uses a decoupled, cloud-ready architecture where the React SPA authent
 
 ## 🧠 Database Schema (ERD)
 
-![Entity-Relationship Diagram](./assets/entity_relationship_model.png)
+Data isolation is enforced at the database row level across tenants, workspaces, and nested documents.
+
+👉 **[View Entity-Relationship Diagram (ERD) & Schema Details →](docs/database_schema.md)**
 
 ### Core Entities:
 * **`Tenant`**: The root organization entity representing a company.
 * **`User`**: A team member linked to a tenant, with role enums (`ROLE_COMPANY_ADMIN`, `ROLE_WORKSPACE_ADMIN`, `ROLE_MEMBER`, `ROLE_VIEWER`).
 * **`Workspace`**: Departmental space (e.g., "Engineering") owned by a tenant.
 * **`Document`**: The core authoring unit. Contains rich metadata (`title`, `content`, `icon`, `cover_image_url`, `position_order`) and parent-child self-references.
+
+---
+
+## 📚 Technical Documentation
+
+Explore deep-dive specifications, architecture flowcharts, and system designs:
+
+| Document | Description |
+| :--- | :--- |
+| 🏗️ **[System Architecture](docs/architecture.md)** | Tiers, Clerk JWT auth flow, onboarding lifecycle, and deployment topology |
+| 🗄️ **[Database Schema & ERD](docs/database_schema.md)** | Entity-relationship model, tables, indexing, and row-level tenant isolation |
+| 📐 **[Comprehensive System Reference](docs/architecture_and_diagrams.md)** | Full technical reference with 10 deep-dive Mermaid diagrams |
 
 ---
 

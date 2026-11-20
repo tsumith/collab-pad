@@ -28,7 +28,10 @@ frontend/yarn-error.log*
 .classpath
 .project
 .metadata/
-bin/
 
-# Documentation
-docs/
+# Internal Reference Docs
+docs/PRD.md
+docs/implementation_plan.md
+docs/priority_1_team_management_guide.md
+docs/scripts/
+
