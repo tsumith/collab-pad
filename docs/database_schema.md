@@ -2,7 +2,7 @@
 
 > **Module:** Persistence Tier & Multi-Tenant Schema  
 > **Last Verified:** Current `main` branch  
-> **Related Documents:** [System Architecture](architecture.md) | [Comprehensive Architecture & Workflows](architecture_and_diagrams.md)
+> **Related Documents:** [System Architecture & Diagrams](architecture.md)
 
 ---
 

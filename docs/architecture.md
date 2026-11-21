@@ -1,19 +1,20 @@
-# CollabPad — System Architecture Specification
+# CollabPad — System Architecture, Workflows & Diagrams
 
-> **Module:** System Architecture & Topology  
-> **Last Verified:** Current `main` branch  
-> **Related Documents:** [Database Schema](database_schema.md) | [Comprehensive Architecture & Workflows](architecture_and_diagrams.md)
+> **Target Audience:** New engineers, contributors, and technical stakeholders onboarding onto CollabPad.  
+> **Repository:** Monorepo containing Spring Boot backend (`collabpad/`) and React Vite frontend (`frontend/`).  
+> **Related Document:** [Database Schema & ERD](database_schema.md)  
+> **Image Assets:** High-resolution PNGs and vector SVGs available in `docs/images/`.
 
 ---
 
-## 1. System Topology Overview
+## 1. System Overview & Deployment Topology
 
-CollabPad is a modern multi-tenant SaaS knowledge management platform built on a decoupled, cloud-native architecture. The client SPA authenticates users through Clerk, forwards short-lived JWTs to the Spring Boot Core API, and the backend verifies the tokens directly against Clerk's JWKS endpoint before scoping all queries to the user's tenant in PostgreSQL.
+CollabPad is a modern multi-tenant SaaS knowledge management platform. It uses a decoupled client-server architecture where the frontend interacts directly with the Spring Boot backend using OAuth2 JWT authentication provided by Clerk.
 
 ![System Overview & Deployment Topology](images/01_system_topology.png)
 
 <details>
-<summary>▶ View Mermaid Diagram Source</summary>
+<summary>▶ View Mermaid Diagram Source Code</summary>
 
 ```mermaid
 flowchart TD
@@ -57,35 +58,81 @@ flowchart TD
 
 ---
 
-## 2. Tier Breakdown
+## 2. Entity-Relationship Data Model (ERD)
 
-### 2.1 Client Tier (React 19 + Vite)
-* **Hosting:** Vercel Edge CDN with global edge caching and automatic SSL.
-* **Authentication Interceptor:** An Axios interceptor in `src/api.js` intercepts every outgoing HTTP request, dynamically fetches an active session JWT from `@clerk/react`, and injects `Authorization: Bearer <JWT>` into headers.
-* **UI Components:**
-  * `Sidebar.jsx`: Dynamic tree hierarchy navigation, workspace switcher, and mobile drawer.
-  * `Dashboard.jsx`: Workspace overview and flat/recent document cards.
-  * `DocumentEditor.jsx`: Document reading and editing interface.
-  * `OnboardingWizard.jsx`: Automated company registration modal for un-enrolled users.
+The database enforces a **Row-Level Tenant Isolation** model. All core business data (`workspaces`, `documents`, `users`) contain a foreign key reference to `tenants.id`.
 
-### 2.2 Identity & Access Management (Clerk)
-* Handles user authentication, social logins, passwordless magic links, and session lifecycles.
-* Exposes a public JSON Web Key Set (JWKS) endpoint at `${CLERK_ISSUER_URI}/.well-known/jwks.json`.
-* Eliminates the need to store passwords or implement bespoke token rotation in the backend.
+![Entity-Relationship Data Model](images/02_entity_relationship_model.png)
 
-### 2.3 Application Tier (Spring Boot 3.4.2)
-* **Runtime:** Containerized Eclipse Temurin Alpine JRE 17 running on Render.
-* **Security Layer:** Spring Security operates as an **OAuth2 Resource Server**, cryptographically validating JWT signatures against Clerk's JWKS key discovery endpoint.
-* **Tenant Scoping:** `UserService.getOrCreateUserFromJwt(jwt)` maps claims to the tenant boundary. Every subsequent repository query and mutation is strictly filtered by `tenant_id`.
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
 
-### 2.4 Persistence Tier (PostgreSQL on Neon)
-* Serverless PostgreSQL 16 hosted on Neon with connection pooling.
-* Enforces row-level isolation via non-nullable `tenant_id` foreign keys on core tables.
-* Structured relational indexing on `(workspace_id, tenant_id)` and self-referential `parent_document_id`.
+```mermaid
+erDiagram
+    TENANT ||--o{ USER : "has members"
+    TENANT ||--o{ WORKSPACE : "owns departments"
+    TENANT ||--o{ DOCUMENT : "isolates data"
+    USER ||--o{ WORKSPACE : "owns / administers"
+    USER ||--o{ DOCUMENT : "authors"
+    WORKSPACE ||--o{ DOCUMENT : "contains"
+    DOCUMENT ||--o{ DOCUMENT : "parent of (hierarchical tree)"
+
+    TENANT {
+        bigint id PK "Auto-incrementing ID"
+        varchar name "Company / Organization name"
+        timestamp created_at "Created timestamp"
+        timestamp updated_at "Updated timestamp"
+    }
+
+    USER {
+        bigint id PK "Auto-incrementing ID"
+        uuid user_id "Unique external UUID"
+        varchar name "Full Name"
+        varchar email UK "Unique email address"
+        varchar role "ROLE_COMPANY_ADMIN, ROLE_MEMBER, etc."
+        bigint tenant_id FK "References tenants.id (NOT NULL)"
+        timestamp created_at "Created timestamp"
+        timestamp updated_at "Updated timestamp"
+    }
+
+    WORKSPACE {
+        bigint id PK "Auto-incrementing ID"
+        varchar name "Workspace department name (e.g. Engineering)"
+        varchar description "Optional workspace description"
+        bigint tenant_id FK "References tenants.id (NOT NULL)"
+        bigint owner_id FK "References users.id (nullable)"
+        timestamp created_at "Created timestamp"
+        timestamp updated_at "Updated timestamp"
+    }
+
+    DOCUMENT {
+        bigint id PK "Auto-incrementing ID"
+        uuid document_id "Unique document UUID"
+        varchar title "Document title (max 255)"
+        text content "Raw document body"
+        bigint workspace_id FK "References workspaces.id (NOT NULL)"
+        bigint tenant_id FK "References tenants.id (NOT NULL)"
+        bigint author_id FK "References users.id (NOT NULL)"
+        bigint parent_document_id FK "References documents.id (Self-ref, nullable)"
+        varchar icon "Emoji or icon identifier"
+        varchar cover_image_url "Header banner URL"
+        double_precision position_order "Ordering rank among siblings"
+        timestamp created_at "Created timestamp"
+        timestamp updated_at "Updated timestamp"
+    }
+```
+</details>
 
 ---
 
-## 3. End-to-End Authentication & Authorization Lifecycle
+## 3. End-to-End Authentication & Authorization Flow
+
+CollabPad uses Clerk for authentication and Spring Security Resource Server for token verification.
+
+![End-to-End Authentication & Authorization Flow](images/03_authentication_flow.png)
+
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
 
 ```mermaid
 sequenceDiagram
@@ -133,10 +180,18 @@ sequenceDiagram
         end
     end
 ```
+</details>
 
 ---
 
-## 4. First-Time User Onboarding Lifecycle
+## 4. Multi-Tenant Onboarding Flow (First-Time User Experience)
+
+When a brand new user registers with Clerk, they do not yet have a record in the database. The system detects this and triggers the `OnboardingWizard`.
+
+![Multi-Tenant Onboarding Flow](images/04_onboarding_lifecycle.png)
+
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
 
 ```mermaid
 flowchart TD
@@ -164,26 +219,317 @@ flowchart TD
     EnrollSuccess --> ReloadApp["window.location.reload()"]
     ReloadApp --> Start
 ```
+</details>
 
 ---
 
-## 5. CI/CD & Deployment Architecture
+## 5. Hierarchical Document Tree: In-Memory Recursive Assembly
+
+CollabPad stores hierarchical relationships relationally (`parent_document_id`), but the frontend needs an arbitrarily deep recursive tree node structure. The tree building logic lives in [`DocumentService.getDocumentTree`](file:///c:/sumith/projects/collab-pad/collabpad/src/main/java/com/sumith/collabpad/service/DocumentService.java#L101-L153).
+
+### 5.1 Algorithm Flowchart
+
+![Document Tree Building Algorithm](images/05_document_tree_algorithm.png)
+
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
 
 ```mermaid
-flowchart LR
-    Dev["Developer push to main"] --> GHA["GitHub Actions CI"]
-    
-    subgraph CI["Automated CI Verification"]
-        BEBuild["Backend: Maven test-compile & package"]
-        FEBuild["Frontend: Vite build & lint check"]
-    end
-    
-    GHA --> BEBuild
-    GHA --> FEBuild
-    
-    BEBuild --> RenderHook["Deploy Trigger: Render Webhook"]
-    FEBuild --> VercelHook["Deploy Trigger: Vercel Git Hook"]
-    
-    RenderHook --> RenderSvc["Render Core API (Containerized JRE)"]
-    VercelHook --> VercelSvc["Vercel Edge Network (SPA)"]
+flowchart TD
+    Req["GET /api/v1/documents/tree?workspaceId=W"]
+    --> QueryDB["Query DB: documentRepository.findByWorkspaceIdAndTenantId(W, Tenant)"]
+    --> MapNodes["Transform List<Document> into Map<Long, DocumentNodeResponse>\nInitialize empty children list for each node"]
+    --> InitRoots["Initialize empty List<DocumentNodeResponse> roots"]
+    --> Iterate{"Iterate through each Document in allDocs"}
+
+    Iterate -- "doc.getParentDocument() == null" --> AddRoot["Add node to roots list"]
+    Iterate -- "doc.getParentDocument() != null" --> CheckParent{"Does parent node exist in Map?"}
+
+    CheckParent -- "Yes" --> AppendChild["parentNode.children().add(node)"]
+    CheckParent -- "No (Orphan)" --> AddRoot
+
+    AddRoot --> NextDoc{"More docs?"}
+    AppendChild --> NextDoc
+
+    NextDoc -- "Yes" --> Iterate
+    NextDoc -- "No" --> SortRoots["Sort roots by positionOrder"]
+    SortRoots --> RecurseSort["Recursively sort all children by positionOrder"]
+    RecurseSort --> ReturnTree["Return List<DocumentNodeResponse> JSON to client"]
 ```
+</details>
+
+### 5.2 Tree Visual Representation
+
+![Workspace Document Hierarchy](images/06_document_tree_structure.png)
+
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
+
+```mermaid
+graph TD
+    classDef root fill:#2563eb,stroke:#1d4ed8,color:#fff;
+    classDef subpage fill:#475569,stroke:#334155,color:#fff;
+    classDef leaf fill:#0f766e,stroke:#115e59,color:#fff;
+
+    R1["📁 Company Wiki (Root)"]:::root
+    R2["📁 Engineering Guidelines (Root)"]:::root
+
+    R1 --> C1["📄 Getting Started (Sub-page)"]:::subpage
+    R1 --> C2["📄 Remote Work Policy (Sub-page)"]:::subpage
+
+    R2 --> C3["📐 Architecture Specs (Sub-page)"]:::subpage
+    R2 --> C4["🚀 Release Runbook (Sub-page)"]:::subpage
+    C3 --> C31["📝 Neon DB Setup (Deep Leaf)"]:::leaf
+    C3 --> C32["📝 Clerk Auth Config (Deep Leaf)"]:::leaf
+```
+</details>
+
+---
+
+## 6. Document CRUD Operations & Tenant Security Isolation
+
+Every single database query or mutation verifies that the resource belongs to the tenant stored in the user's JWT. Cross-tenant access attempts immediately fail.
+
+![Document CRUD Operations & Tenant Security Isolation](images/07_document_crud_security.png)
+
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User (Tenant #1)
+    participant Controller as DocumentController.java
+    participant Service as DocumentService.java
+    participant DB as PostgreSQL (Neon)
+
+    Note over User,DB: Scenario 1: Creating a Document
+    User->>Controller: POST /api/v1/documents (DocumentRequest with title, content, workspaceId, parentId)
+    Controller->>Service: createDocument(tenantId=1, workspaceId, authorId, request)
+    Service->>DB: Verify workspace belongs to Tenant #1
+    alt Workspace belongs to Tenant #2
+        Service-->>Controller: Throws SecurityException("Workspace does not belong to this tenant!")
+        Controller-->>User: HTTP 403 Forbidden
+    end
+    alt ParentId provided
+        Service->>DB: Verify parent document belongs to same workspace & Tenant #1
+        alt Cross-workspace parent attempted
+            Service-->>Controller: Throws SecurityException("Parent document must be in the same workspace")
+            Controller-->>User: HTTP 403 Forbidden
+        end
+    end
+    Service->>DB: Save new Document
+    DB-->>Service: Document saved with generated ID & UUID
+    Service-->>Controller: DocumentResponse DTO
+    Controller-->>User: HTTP 201 Created
+
+    Note over User,DB: Scenario 2: Fetching / Updating / Deleting a Document
+    User->>Controller: PUT /api/v1/documents/{id}
+    Controller->>Service: updateDocument(tenantId=1, id, request)
+    Service->>DB: SELECT * FROM documents WHERE id = {id}
+    DB-->>Service: Found Document
+    alt document.getTenant().getId() != tenantId
+        Service-->>Controller: Throws SecurityException("Unauthorized access to document!")
+        Controller-->>User: HTTP 403 Forbidden
+    else document.getId() == request.parentId()
+        Service-->>Controller: Throws IllegalArgumentException("Document cannot be its own parent")
+        Controller-->>User: HTTP 400 Bad Request
+    else Valid Tenant & Valid Hierarchy
+        Service->>DB: Update document fields & save
+        DB-->>Service: Saved
+        Service-->>Controller: DocumentResponse DTO
+        Controller-->>User: HTTP 200 OK
+    end
+```
+</details>
+
+---
+
+## 7. Frontend State Machine & UI Navigation
+
+The React client state is managed primarily at the top level in [`App.jsx`](file:///c:/sumith/projects/collab-pad/frontend/src/App.jsx).
+
+![Frontend State Machine & UI Navigation](images/08_frontend_state_machine.png)
+
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
+
+```mermaid
+stateDiagram-v2
+    [*] --> IdentityLoading: App Mounts
+
+    state IdentityLoading {
+        [*] --> CheckClerk: isLoaded?
+    }
+
+    IdentityLoading --> SignedOut: isSignedIn === false
+    IdentityLoading --> SignedIn: isSignedIn === true
+
+    state SignedOut {
+        [*] --> RenderClerkSignIn: Render <SignIn />
+    }
+
+    state SignedIn {
+        [*] --> CheckEnrollment
+
+        state CheckEnrollment {
+            [*] --> WorkspaceCheck: Fetch /api/v1/workspaces
+            WorkspaceCheck --> Enrolled: 200 OK
+            WorkspaceCheck --> NotEnrolled: Error / Needs Onboarding
+        }
+
+        state OnboardingWizardView {
+            RenderWizardModal: Render <OnboardingWizard />
+            SubmitCompany: Submit company & departments
+        }
+
+        NotEnrolled --> OnboardingWizardView: needsOnboarding = true
+        OnboardingWizardView --> Enrolled: Reload on completion
+
+        state MainWorkspaceView {
+            [*] --> DashboardView: currentView === 'dashboard'
+            DashboardView --> EditorView: Click document card / tree node
+            EditorView --> DashboardView: Click 'Back' button
+            DashboardView --> TeamView: Click 'Team Directory' nav
+            TeamView --> DashboardView: Click 'Dashboard' nav
+            EditorView --> TeamView: Click 'Team Directory' nav
+        }
+
+        Enrolled --> MainWorkspaceView
+    }
+```
+</details>
+
+---
+
+## 8. Backend Software Architecture (Layers & Responsibilities)
+
+The Spring Boot backend strictly follows clean layered architecture principles:
+
+![Backend Software Architecture](images/09_backend_class_architecture.png)
+
+<details>
+<summary>▶ View Mermaid Diagram Source Code</summary>
+
+```mermaid
+classDiagram
+    class SecurityConfig {
+        +filterChain(HttpSecurity) SecurityFilterChain
+        +corsConfigurationSource() CorsConfigurationSource
+    }
+
+    class DocumentController {
+        -DocumentService documentService
+        -UserService userService
+        +createDocument(Jwt, DocumentRequest) ResponseEntity
+        +getDocument(Jwt, Long) ResponseEntity
+        +getAllDocuments(Jwt, Long) ResponseEntity
+        +getDocumentTree(Jwt, Long) ResponseEntity
+        +updateDocument(Jwt, Long, DocumentRequest) ResponseEntity
+        +deleteDocument(Jwt, Long) ResponseEntity
+    }
+
+    class WorkspaceController {
+        -WorkspaceService workspaceService
+        -UserService userService
+        +getAllWorkspaces(Jwt) ResponseEntity
+    }
+
+    class OnboardingController {
+        -OnboardingService onboardingService
+        +enrollCompany(Jwt, EnrollmentRequest) ResponseEntity
+    }
+
+    class DocumentService {
+        -DocumentRepository documentRepository
+        -TenantRepository tenantRepository
+        -WorkspaceRepository workspaceRepository
+        -UserRepository userRepository
+        +createDocument(...) DocumentResponse
+        +getDocumentById(...) DocumentResponse
+        +getAllDocuments(...) List~DocumentResponse~
+        +getDocumentTree(...) List~DocumentNodeResponse~
+        +updateDocument(...) DocumentResponse
+        +deleteDocument(...) void
+    }
+
+    class UserService {
+        -UserRepository userRepository
+        -TenantRepository tenantRepository
+        -WorkspaceRepository workspaceRepository
+        +getOrCreateUserFromJwt(Jwt) User
+    }
+
+    class OnboardingService {
+        -UserRepository userRepository
+        -TenantRepository tenantRepository
+        -WorkspaceRepository workspaceRepository
+        -DocumentRepository documentRepository
+        +enrollCompany(Jwt, EnrollmentRequest) User
+    }
+
+    class Document {
+        -Long id
+        -UUID documentId
+        -String title
+        -String content
+        -Workspace workspace
+        -Tenant tenant
+        -User author
+        -Document parentDocument
+        -String icon
+        -String coverImageUrl
+        -Double positionOrder
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+    }
+
+    class Tenant {
+        -Long id
+        -String name
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+    }
+
+    class User {
+        -Long id
+        -UUID userId
+        -String name
+        -String email
+        -Role role
+        -Tenant tenant
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+    }
+
+    class Workspace {
+        -Long id
+        -String name
+        -String description
+        -Tenant tenant
+        -User owner
+        -OffsetDateTime createdAt
+        -OffsetDateTime updatedAt
+    }
+
+    DocumentController ..> DocumentService
+    WorkspaceController ..> UserService
+    OnboardingController ..> OnboardingService
+    DocumentService ..> Document
+    DocumentService ..> Tenant
+    DocumentService ..> Workspace
+    DocumentService ..> User
+    UserService ..> User
+```
+</details>
+
+---
+
+## 9. Summary Cheat Sheet for New Developers
+
+| Question / Action | Location in Codebase |
+| :--- | :--- |
+| **How does authentication work?** | Frontend: `src/api.js` attaches Clerk JWT token. Backend: [`SecurityConfig.java`](file:///c:/sumith/projects/collab-pad/collabpad/src/main/java/com/sumith/collabpad/config/SecurityConfig.java) verifies with Clerk JWKS. |
+| **Where is the user's company identified?** | [`UserService.java`](file:///c:/sumith/projects/collab-pad/collabpad/src/main/java/com/sumith/collabpad/service/UserService.java) resolves the `User` entity by email claim, granting access to `user.getTenant()`. |
+| **How is document nesting represented?** | In DB: `documents.parent_document_id`. In Backend: [`DocumentService.java`](file:///c:/sumith/projects/collab-pad/collabpad/src/main/java/com/sumith/collabpad/service/DocumentService.java) transforms this to `DocumentNodeResponse` trees. In UI: [`Sidebar.jsx`](file:///c:/sumith/projects/collab-pad/frontend/src/components/Sidebar.jsx) renders recursive `TreeItem`s. |
+| **How to run the system locally?** | Run PostgreSQL (or Docker `docker-compose up -d postgres`), then `./mvnw spring-boot:run` in `collabpad/`, and `npm run dev` in `frontend/`. |

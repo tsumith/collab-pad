@@ -62,9 +62,8 @@ Explore deep-dive specifications, architecture flowcharts, and system designs:
 
 | Document | Description |
 | :--- | :--- |
-| 🏗️ **[System Architecture](docs/architecture.md)** | Tiers, Clerk JWT auth flow, onboarding lifecycle, and deployment topology |
+| 🏗️ **[System Architecture & Diagrams](docs/architecture.md)** | System topology, Clerk JWT auth flow, onboarding lifecycle, and deep-dive Mermaid diagrams |
 | 🗄️ **[Database Schema & ERD](docs/database_schema.md)** | Entity-relationship model, tables, indexing, and row-level tenant isolation |
-| 📐 **[Comprehensive System Reference](docs/architecture_and_diagrams.md)** | Full technical reference with 10 deep-dive Mermaid diagrams |
 
 ---
 
